@@ -67,7 +67,7 @@ update_certs() {
         base_domains+=("$base_domain")
 
         for domain in "${!hosts_array:1}"; do
-          if [[ $domain == *"$base_domain"* ]]; then
+          if [[ $domain == *".$base_domain"* ]]; then
             echo "$domain contains $base_domain, skipping."
           else
             echo "$domain not found in $base_domain. Adding $domain to base_domains."
