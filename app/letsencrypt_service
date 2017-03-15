@@ -64,7 +64,7 @@ update_certs() {
 
         # Identify base_domains
         declare -a base_domains
-        base_domains+=("$base_domain")
+        base_domains=("$base_domain")
 
         for domain in "${!hosts_array:1}"; do
           if [[ $domain == *".$base_domain"* ]]; then
