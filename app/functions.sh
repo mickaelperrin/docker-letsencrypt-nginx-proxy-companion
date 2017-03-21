@@ -32,6 +32,7 @@ remove_all_location_configurations() {
 function docker_api {
     local scheme
     local curl_opts=(-s)
+    local request=$(sed -e 's/^"//' -e 's/"$//' <<<"$1")
     local method=${2:-GET}
     # data to POST
     if [[ -n "${3:-}" ]]; then
@@ -43,12 +44,12 @@ function docker_api {
     fi
     if [[ $DOCKER_HOST == unix://* ]]; then
         curl_opts+=(--unix-socket ${DOCKER_HOST#unix://})
-        scheme='http:'
+        scheme='http://localhost'
     else
         scheme="http://${DOCKER_HOST#*://}"
     fi
     [[ $method = "POST" ]] && curl_opts+=(-H 'Content-Type: application/json')
-    curl "${curl_opts[@]}" -X${method} ${scheme}$1
+    curl "${curl_opts[@]}" -X${method} ${scheme}$request
 }
 
 function docker_exec {
