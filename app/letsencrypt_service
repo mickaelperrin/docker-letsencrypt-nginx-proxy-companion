@@ -93,7 +93,7 @@ update_certs() {
         done
 
         echo "Creating/renewal $base_domain certificates... (${hosts_array_expanded[*]})"
-        /usr/bin/certbot certonly --webroot \
+        /usr/local/bin/certbot certonly --webroot \
             --noninteractive \
             --key-path key.pem --fullchain-path fullchain.pem --cert-path cert.pem \
             --agree-tos \
