@@ -48,11 +48,17 @@ update_certs() {
         # Array variable indirection hack: http://stackoverflow.com/a/25880676/350221
         hosts_array=$host_varname[@]
         email_varname="LETSENCRYPT_${cid}_EMAIL"
+        validation_method_varname="LETSENCRYPT_${cid}_VALIDATION"
 
         test_certificate_varname="LETSENCRYPT_${cid}_TEST"
         create_test_certificate=false
         if [[ $(lc "${!test_certificate_varname:-}") == true ]]; then
             create_test_certificate=true
+        fi
+
+        validation_method=http
+        if [[ $(lc "${!validation_method_varname:-}") == 'dns-ovh' ]]; then
+          validation_method=dns-ovh
         fi
 
         params_d_str=""
@@ -88,20 +94,38 @@ update_certs() {
         for domain in "${!hosts_array}"; do
             # Add all the domains to certificate
             params_d_str+=" -d $domain"
-            # Add location configuration for the domain
-            add_location_configuration "$domain" || reload_nginx
+            if [[ "$validation_method" == 'http' ]]; then
+              # Add location configuration for the domain
+              add_location_configuration "$domain" || reload_nginx
+            fi
         done
 
         echo "Creating/renewal $base_domain certificates... (${hosts_array_expanded[*]})"
-        /usr/local/bin/certbot certonly --webroot \
-            --noninteractive \
-            --config-dir /etc/nginx/certs/.letsencrypt \
-            --key-path privkey.pem --fullchain-path fullchain.pem --cert-path cert.pem \
-            --agree-tos \
-            $params_d_str \
-            -m "${!email_varname}" \
-            --server $acme_ca_uri \
-            -w /usr/share/nginx/html/
+        case "$validation_method" in
+          http)
+            /usr/local/bin/certbot certonly --webroot \
+              --noninteractive \
+              --config-dir /etc/nginx/certs/.letsencrypt \
+              --key-path privkey.pem --fullchain-path fullchain.pem --cert-path cert.pem \
+              --agree-tos \
+              $params_d_str \
+              -m "${!email_varname}" \
+              --server $acme_ca_uri \
+              -w /usr/share/nginx/html/
+            ;;
+          dns-ovh)
+            /usr/local/bin/certbot certonly  \
+              --dns-ovh \
+              --dns-ovh-credentials /.ovh.ini \
+              --noninteractive \
+              --config-dir /etc/nginx/certs/.letsencrypt \
+              --key-path privkey.pem --fullchain-path fullchain.pem --cert-path cert.pem \
+              --agree-tos \
+              $params_d_str \
+              -m "${!email_varname}" \
+              --server $acme_ca_uri
+            ;;
+        esac
 
         simp_le_return=$?
 
