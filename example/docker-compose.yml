@@ -1,0 +1,27 @@
+version: '2'
+
+services:
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    volumes:
+      - ./nginx-proxy/html:/usr/share/nginx/html
+      - ./nginx-proxy/certs:/etc/nginx/certs:ro
+      - ./nginx-proxy/vhost.d:/etc/nginx/vhost.d
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - letsencrypt
+  lets-encrypt:
+    build: ..
+    volumes:
+      - ./nginx-proxy/certs:/etc/nginx/certs:rw
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./ovh.ini:/.ovh.ini
+    volumes_from:
+      - nginx-proxy
+    networks:
+      - letsencrypt
+
+networks:
+  letsencrypt:
+    external:
+      name: letsencrypt

@@ -1,0 +1,18 @@
+version: '2'
+
+services:
+  nginx:
+    image: nginx:1.13
+    environment:
+    - VIRTUAL_HOST=www.domain.tld
+    - LETSENCRYPT_HOST=www.domain.tld
+    - LETSENCRYPT_EMAIL=app@domain.tld
+    - LETSENCRYPT_TEST=true
+    - LETSENCRYPT_VALIDATION=dns-ovh
+    networks:
+      - default
+      - letsencrypt
+networks:
+  letsencrypt:
+    external:
+      name: letsencrypt
