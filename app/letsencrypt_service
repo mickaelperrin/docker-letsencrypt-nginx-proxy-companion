@@ -18,14 +18,14 @@ create_links() {
     local readonly base_domain=${1?missing base_domain argument}
     local readonly domain=${2?missing base_domain argument}
 
-    if [[ ! -f "/etc/nginx/certs/$base_domain"/fullchain.pem || \
-          ! -f "/etc/nginx/certs/$base_domain"/key.pem ]]; then
+    if [[ ! -f "/etc/nginx/certs/.letsencrypt/live/${base_domain}/fullchain.pem" || \
+          ! -f "/etc/nginx/certs/.letsencrypt/live/${base_domain}/privkey.pem" ]]; then
         return 1
     fi
     local return_code=1
-    create_link "/etc/nginx/certs/$domain".crt "./$base_domain"/fullchain.pem
+    create_link "/etc/nginx/certs/${domain}.crt" "/etc/nginx/certs/.letsencrypt/live/${base_domain}/fullchain.pem"
     return_code=$(( $return_code & $? ))
-    create_link "/etc/nginx/certs/$domain".key "./$base_domain"/key.pem
+    create_link "/etc/nginx/certs/${domain}.key" "/etc/nginx/certs/.letsencrypt/live/${base_domain}/privkey.pem"
     return_code=$(( $return_code & $? ))
     if [[ -f "/etc/nginx/certs/dhparam.pem" ]]; then
         create_link "/etc/nginx/certs/$domain".dhparam.pem ./dhparam.pem
@@ -95,7 +95,8 @@ update_certs() {
         echo "Creating/renewal $base_domain certificates... (${hosts_array_expanded[*]})"
         /usr/local/bin/certbot certonly --webroot \
             --noninteractive \
-            --key-path key.pem --fullchain-path fullchain.pem --cert-path cert.pem \
+            --config-dir /etc/nginx/certs/.letsencrypt \
+            --key-path privkey.pem --fullchain-path fullchain.pem --cert-path cert.pem \
             --agree-tos \
             $params_d_str \
             -m "${!email_varname}" \
