@@ -85,10 +85,6 @@ update_certs() {
             fi
         fi
 
-        # Create directory for the first domain
-        mkdir -p /etc/nginx/certs/$base_domain
-        cd /etc/nginx/certs/$base_domain
-
         for domain in "${!hosts_array}"; do
             # Add all the domains to certificate
             params_d_str+=" -d $domain"
@@ -107,11 +103,6 @@ update_certs() {
             -w /usr/share/nginx/html/
 
         simp_le_return=$?
-
-        for altnames in ${hosts_array_expanded[@]:1}; do
-            # Remove old CN domain that now are altnames
-            rm -rf /etc/nginx/certs/$altnames
-        done
 
         for domain in "${!hosts_array}"; do
             create_links $base_domain $domain && reload_nginx='true'
